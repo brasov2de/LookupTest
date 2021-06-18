@@ -6,12 +6,19 @@
 /* eslint-disable no-mixed-spaces-and-tabs */
 /* eslint-disable no-tabs */
 /* eslint-disable no-undef */
+import { LookupAllOptions } from 'dns';
 import { IInputs, IOutputs } from './generated/ManifestTypes'
 
 export class LookupTest implements ComponentFramework.StandardControl<IInputs, IOutputs> {
 	private val: any[] = [];
 	private container:HTMLDivElement;
 	private content: HTMLSpanElement;
+
+	private defaultEntityType : string;
+	private viewId : string;
+	private entityTypes : string[];
+	private viewIds : string[];
+	
 
 	/**
 	 * Empty constructor.
@@ -21,9 +28,21 @@ export class LookupTest implements ComponentFramework.StandardControl<IInputs, I
 
 	}
 
-	private logMe(lookup1: ComponentFramework.PropertyTypes.Property, lookup2: ComponentFramework.PropertyTypes.Property){
+	private logMe(lookup1: ComponentFramework.PropertyTypes.LookupProperty, lookup2: ComponentFramework.PropertyTypes.LookupProperty){
+		// eslint-disable-next-line dot-location	
+
 		console.group();
-		console.log("values", lookup1.raw, lookup2.raw);	
+		console.log("value 1", lookup1.raw, lookup2.raw);	
+		this.content.innerText = lookup1.raw?.length > 0 ? lookup1.raw[0].name ?? "" : "---";
+		this.defaultEntityType = lookup1.getTargetEntityType();
+		this.entityTypes = [this.defaultEntityType];
+		this.viewId = lookup1.getViewId();
+
+		this.viewIds = (lookup1 as any).availableViewIds.split(",");
+
+		
+		console.log("metadata.Targets", (lookup1 as any).attributes.Targets);
+
 		
 		console.log(`Lookup configuration:`, (lookup1 as any).getLookupConfiguration(), (lookup2 as any).getLookupConfiguration());
 		console.group("1. Display Search Box")		
@@ -63,14 +82,35 @@ export class LookupTest implements ComponentFramework.StandardControl<IInputs, I
 	public init (context: ComponentFramework.Context<IInputs>, notifyOutputChanged: () => void, state: ComponentFramework.Dictionary, container:HTMLDivElement): void {
 	  this.container = container;
 	  const button = document.createElement('button');
-	  button.textContent = 'Click me';
+	  button.textContent = 'Open';
 	  button.addEventListener('click', () => {
-		 (context.parameters.sampleProperty as any).runPreSearch();
-		 console.log("after presearch 1", context.parameters.sampleProperty);
-		 const ret2 = (context.parameters.secondProperty as any).runPreSearch();
-		 console.log("after preSearch 2", context.parameters.secondProperty);
-	     notifyOutputChanged()
+		/* (context.parameters.sampleProperty as any).runPreSearch();
+		 console.log("after presearch 1", context.parameters.sampleProperty);*/
+		 /*
+	  const viewIds = lookup1.enableViewPicker === true //more views possible
+	  					? lookup1.availableViewIds == null //View Selector was "All Views"
+	  						? lookup1.getAllViews() //or similar
+							: Promise.resolve(lookup1.availableViewIds.split(",")) //thge selected views were defined
+						: undefined; //else the user shouldn't be able to change the view		
+		*/
+		context.utils.lookupObjects({
+			allowMultiSelect: false, 
+			defaultEntityType: this.defaultEntityType, 
+			defaultViewId: this.viewId, 
+			entityTypes: this.entityTypes, 
+			viewIds: this.viewIds
+		})
+		.then((values) => {
+			if (values?.length>0){
+				this.val = values;
+				notifyOutputChanged()
+			}
+			// otherwise the "Cancel" button was clicked
+		})
+		.catch(console.error);
 	  });
+
+
 	  container.appendChild(button);
 	  const button1 = document.createElement('button');
 	  button1.textContent = 'openRecord';
@@ -82,8 +122,9 @@ export class LookupTest implements ComponentFramework.StandardControl<IInputs, I
 	  container.appendChild(button1);
 
 	  this.content = document.createElement('span');
+	  this.content.textContent = context.parameters.sampleProperty?.raw?.name;
 	  container.appendChild(this.content);
-	  this.logMe(context.parameters.sampleProperty, context.parameters.secondProperty);	  
+	  this.logMe(context.parameters.sampleProperty as any, context.parameters.secondProperty as any);	  
 	}
 
 	/**
@@ -91,7 +132,7 @@ export class LookupTest implements ComponentFramework.StandardControl<IInputs, I
 	 * @param context The entire property bag available to control via Context Object; It contains values as set up by the customizer mapped to names defined in the manifest, as well as utility functions
 	 */
 	public updateView (context: ComponentFramework.Context<IInputs>): void {	  	  	  
-		this.logMe(context.parameters.sampleProperty, context.parameters.secondProperty);
+		this.logMe(context.parameters.sampleProperty as any, context.parameters.secondProperty as any);
 	}
 
 	/**
