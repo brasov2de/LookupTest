@@ -1,15 +1,8 @@
-/* eslint-disable quotes */
-/* eslint-disable space-before-blocks */
-/* eslint-disable no-trailing-spaces */
-/* eslint-disable indent */
-/* eslint-disable semi */
-/* eslint-disable no-mixed-spaces-and-tabs */
-/* eslint-disable no-tabs */
-/* eslint-disable no-undef */
-import { LookupAllOptions } from 'dns';
 import { IInputs, IOutputs } from './generated/ManifestTypes'
+import { HelloWorld, IHelloWorldProps } from "./HelloWorld";
+import * as React from "react";
 
-export class LookupTest implements ComponentFramework.StandardControl<IInputs, IOutputs> {
+export class LookupTest implements ComponentFramework.ReactControl<IInputs, IOutputs>  {
 	private val: any[] = [];
 	private container:HTMLDivElement;
 	private content: HTMLSpanElement;
@@ -28,45 +21,50 @@ export class LookupTest implements ComponentFramework.StandardControl<IInputs, I
 
 	}
 
-	private logMe(lookup1: ComponentFramework.PropertyTypes.LookupProperty, lookup2: ComponentFramework.PropertyTypes.LookupProperty){
+	private logMe(lookup1: ComponentFramework.PropertyTypes.LookupProperty){
 		// eslint-disable-next-line dot-location	
 
 		console.group();
-		console.log("value 1", lookup1.raw, lookup2.raw);	
-		this.content.innerText = lookup1.raw?.length > 0 ? lookup1.raw[0].name ?? "" : "---";
+		console.log("value 1", lookup1.raw, lookup1.raw);			
 		this.defaultEntityType = lookup1.getTargetEntityType();
 		this.entityTypes = [this.defaultEntityType];
 		this.viewId = lookup1.getViewId();
 
-		this.viewIds = (lookup1 as any).availableViewIds.split(",");
+		this.viewIds = (lookup1 as any).availableViewIds?.split(",");
 
 		
-		console.log("metadata.Targets", (lookup1 as any).attributes.Targets);
-
+		console.log("metadata.Targets", (lookup1 as any).attributes.Targets);		
 		
-		console.log(`Lookup configuration:`, (lookup1 as any).getLookupConfiguration(), (lookup2 as any).getLookupConfiguration());
+		console.log(`Lookup configuration:`, (lookup1 as any).getLookupConfiguration(), (lookup1 as any).getLookupConfiguration());
 		console.group("1. Display Search Box")		
-		console.log("disableQuickFind: ", (lookup1 as any).disableQuickFind, (lookup2 as any).disableQuickFind);
+		console.log("disableQuickFind: ", (lookup1 as any).disableQuickFind, (lookup1 as any).disableQuickFind);
 		console.groupEnd();
 		console.group("2. View Selector");
-		console.log("enableViewPicker: ", (lookup1 as any).enableViewPicker, (lookup2 as any).enableViewPicker); 
+		console.log("enableViewPicker: ", (lookup1 as any).enableViewPicker, (lookup1 as any).enableViewPicker); 
 		console.groupEnd();
 		console.group("3. Display Views");
-		console.log("availableViewIds: ", (lookup1 as any).availableViewIds, (lookup2 as any).availableViewIds); 
-		console.log("availableViewNames: ", (lookup1 as any).availableViewNames, (lookup2 as any).availableViewNames); 
+		console.log("availableViewIds: ", (lookup1 as any).availableViewIds, (lookup1 as any).availableViewIds); 
+		console.log("availableViewNames: ", (lookup1 as any).availableViewNames, (lookup1 as any).availableViewNames); 
 		console.groupEnd();
 		console.group("4. DefaultView");
-		console.log("getDefaultViewId: ", (lookup1 as any).getDefaultViewId(), (lookup2 as any).getDefaultViewId()); 
-		console.log("getTitle: ", (lookup1 as any).getTitle(), (lookup2 as any).getTitle()); 
+		console.log("getDefaultViewId: ", (lookup1 as any).getDefaultViewId(), (lookup1 as any).getDefaultViewId()); 
+		console.log("getTitle: ", (lookup1 as any).getTitle(), (lookup1 as any).getTitle()); 
 		console.groupEnd();
 		console.group("5. Filter on Related Lookup");
-		console.log("filterRelationshipName: ", (lookup1 as any).filterRelationshipName, (lookup2 as any).filterRelationshipName); 
-		console.log("dependentAttributeName: ", (lookup1 as any).dependentAttributeName, (lookup2 as any).dependentAttributeName); 		
-		console.log("dependentAttributeType: ", (lookup1 as any).dependentAttributeType, (lookup2 as any).dependentAttributeType); 
+		console.log("filterRelationshipName: ", (lookup1 as any).filterRelationshipName, (lookup1 as any).filterRelationshipName); 
+		console.log("dependentAttributeName: ", (lookup1 as any).dependentAttributeName, (lookup1 as any).dependentAttributeName); 		
+		console.log("dependentAttributeType: ", (lookup1 as any).dependentAttributeType, (lookup1 as any).dependentAttributeType); 
 		console.groupEnd()
 		console.group("6. Users can turn off filter")		
-		console.log("allowFilterOff: ", (lookup1 as any).allowFilterOff, (lookup2 as any).allowFilterOff);
+		console.log("allowFilterOff: ", (lookup1 as any).allowFilterOff, (lookup1 as any).allowFilterOff);
 		console.groupEnd();		
+
+		console.group("7. Display Records from lookup view");
+		(lookup1 as any).sortedRecordIds.forEach((id: string, index: number) => {
+			console.log( (lookup1 as any).records[id].getValue( (lookup1 as any).columns[0].name));
+		});
+		console.groupEnd();
+
 		console.groupEnd();
 	}
 	
@@ -81,58 +79,19 @@ export class LookupTest implements ComponentFramework.StandardControl<IInputs, I
 	 */
 	public init (context: ComponentFramework.Context<IInputs>, notifyOutputChanged: () => void, state: ComponentFramework.Dictionary, container:HTMLDivElement): void {
 	  this.container = container;
-	  const button = document.createElement('button');
-	  button.textContent = 'Open';
-	  button.addEventListener('click', () => {
-		/* (context.parameters.sampleProperty as any).runPreSearch();
-		 console.log("after presearch 1", context.parameters.sampleProperty);*/
-		 /*
-	  const viewIds = lookup1.enableViewPicker === true //more views possible
-	  					? lookup1.availableViewIds == null //View Selector was "All Views"
-	  						? lookup1.getAllViews() //or similar
-							: Promise.resolve(lookup1.availableViewIds.split(",")) //thge selected views were defined
-						: undefined; //else the user shouldn't be able to change the view		
-		*/
-		context.utils.lookupObjects({
-			allowMultiSelect: false, 
-			defaultEntityType: this.defaultEntityType, 
-			defaultViewId: this.viewId, 
-			entityTypes: this.entityTypes, 
-			viewIds: this.viewIds
-		})
-		.then((values) => {
-			if (values?.length>0){
-				this.val = values;
-				notifyOutputChanged()
-			}
-			// otherwise the "Cancel" button was clicked
-		})
-		.catch(console.error);
-	  });
-
-
-	  container.appendChild(button);
-	  const button1 = document.createElement('button');
-	  button1.textContent = 'openRecord';
-	  button1.addEventListener('click', () => {
-		  if (context.parameters.sampleProperty.raw?.length > 0){
-		 		(context.parameters.sampleProperty as any).openDatasetItem(context.parameters.sampleProperty.raw[0]);
-		  }
-	  });
-	  container.appendChild(button1);
-
-	  this.content = document.createElement('span');
-	  this.content.textContent = context.parameters.sampleProperty?.raw?.name;
-	  container.appendChild(this.content);
-	  this.logMe(context.parameters.sampleProperty as any, context.parameters.secondProperty as any);	  
 	}
 
 	/**
 	 * Called when any value in the property bag has changed. This includes field values, data-sets, global values such as container height and width, offline status, control metadata values such as label, visible, etc.
 	 * @param context The entire property bag available to control via Context Object; It contains values as set up by the customizer mapped to names defined in the manifest, as well as utility functions
 	 */
-	public updateView (context: ComponentFramework.Context<IInputs>): void {	  	  	  
-		this.logMe(context.parameters.sampleProperty as any, context.parameters.secondProperty as any);
+	public updateView (context: ComponentFramework.Context<IInputs>): React.ReactElement {	  	  	  
+		this.logMe(context.parameters.sampleProperty as any);
+		
+		const props: IHelloWorldProps = { myLookup: context.parameters.sampleProperty, utils: context.utils };
+        return React.createElement(
+            HelloWorld, props
+        );
 	}
 
 	/**
